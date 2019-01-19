@@ -1579,6 +1579,11 @@ EXTERN_C_BEGIN
                 /* os_dep.c.                                            */
 #       define MPROTECT_VDB
 #       define GWW_VDB
+#       ifdef GC_THREADS
+#         define PUSH_ALL_STACK_ALWAYS_EAGER
+                        /* TODO: Otherwise mark stack overflow might    */
+                        /* occur, the reason is unclear.                */
+#       endif
 #       define DATAEND  /* not needed */
 #   endif
 #   ifdef MSWINCE

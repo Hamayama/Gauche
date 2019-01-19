@@ -1600,7 +1600,7 @@ GC_API void GC_CALL GC_push_all_eager(void *bottom, void *top)
 
 GC_INNER void GC_push_all_stack(ptr_t bottom, ptr_t top)
 {
-#   ifndef NEED_FIXUP_POINTER
+#   if !defined(NEED_FIXUP_POINTER) && !defined(PUSH_ALL_STACK_ALWAYS_EAGER)
       if (GC_all_interior_pointers
 #         if defined(THREADS) && defined(MPROTECT_VDB)
             && !GC_auto_incremental
