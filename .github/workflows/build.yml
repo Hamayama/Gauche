@@ -103,7 +103,8 @@ jobs:
       MSYSTEM: MINGW${{ matrix.bit }}
       MSYS2_PATH_TYPE: inherit
       MSYS2_PATH_LIST: D:\msys64\mingw${{ matrix.bit }}\bin;D:\msys64\usr\local\bin;D:\msys64\usr\bin;D:\msys64\bin
-      MSYS2_TARBALL_URL: http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20190524.tar.xz
+      MSYS2_TARBALL_URL1: http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20190524.tar.xz
+      MSYS2_TARBALL_URL2: http://mirrors.ustc.edu.cn/msys2/distrib/x86_64/msys2-base-x86_64-20190524.tar.xz
       GAUCHE_VERSION_URL: https://practical-scheme.net/gauche/releases/latest.txt
       GAUCHE_INSTALLER_URL: https://prdownloads.sourceforge.net/gauche
       GAUCHE_PATH: ${{ matrix.devtool_path }}\Gauche\bin
@@ -114,10 +115,22 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install MSYS2
       run: |
-        curl -f -o msys2.tar.xz $env:MSYS2_TARBALL_URL
-        #tar xf msys2.tar.xz -C /d/
-        bash -c "7z x msys2.tar.xz -so | 7z x -aoa -si -ttar -oD:"
-        dir D:\
+        bash -lc @'
+          pwd
+          cd $GITHUB_WORKSPACE
+          curl -f -o msys2.tar.xz $MSYS2_TARBALL_URL1
+          err1=$?
+          echo $err1
+          if [ $err1 -ne 0 ]; then
+            curl -f -o msys2.tar.xz $MSYS2_TARBALL_URL2
+            err1=$?
+            echo $err1
+          fi
+          #tar xf msys2.tar.xz -C /d/
+          7z x msys2.tar.xz -so | 7z x -aoa -si -ttar -oD:
+          dir /d/
+          exit $err1
+        '@
     - name: Add MSYS2 path
       run: |
         echo "::set-env name=PATH::$env:MSYS2_PATH_LIST;$env:PATH"
