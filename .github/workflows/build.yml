@@ -117,12 +117,9 @@ jobs:
       run: |
         bash -lc @'
           pwd
-          curl -f -o msys2.tar.xz $MSYS2_TARBALL_URL1
+          curl -f    -o msys2.tar.xz $MSYS2_TARBALL_URL1 ||
+          curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL2
           err1=$?
-          if [ $err1 -ne 0 ]; then
-            curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL2
-            err1=$?
-          fi
           #tar xf msys2.tar.xz -C /d/
           7z x msys2.tar.xz -so | 7z x -aoa -si -ttar -oD:
           ls -l /d/
