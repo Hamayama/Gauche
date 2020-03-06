@@ -9,7 +9,7 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       TESTLOG_NAME: testlog-linux
       TESTLOG_PATH: testlog-linux
@@ -48,7 +48,7 @@ jobs:
 
   build-osx:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       TESTLOG_NAME: testlog-osx
       TESTLOG_PATH: testlog-osx
@@ -87,7 +87,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -117,8 +117,6 @@ jobs:
       run: |
         bash -lc @'
           pwd
-          where curl
-          curl --version
           curl -f    -o msys2.tar.xz $MSYS2_TARBALL_URL1 ||
           curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL2
           err1=$?
@@ -139,18 +137,14 @@ jobs:
     - name: Update MSYS2
       run: |
         bash -lc @'
-          where curl
-          curl --version
           pacman --version
           pacman -Syyuu --noconfirm
         '@
     - name: Install MinGW-w64
       run: |
         bash -lc @'
-          where curl
-          curl --version
           pacman --version
-          pacman -S --noconfirm base-devel
+          pacman -S --noconfirm base-devel &&
           pacman -S --noconfirm mingw${{ matrix.bit }}/mingw-w64-${{ matrix.arch }}-toolchain
         '@
     - name: Install Gauche
