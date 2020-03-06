@@ -134,6 +134,11 @@ jobs:
           pwd
           echo $PATH
         '@
+    - name: Update MSYS2
+      run: |
+        bash -lc @'
+          pacman -Syyuu --noconfirm
+        '@
     - name: Install MinGW-w64
       run: |
         bash -lc @'
