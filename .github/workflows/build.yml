@@ -117,6 +117,8 @@ jobs:
       run: |
         bash -lc @'
           pwd
+          where curl
+          curl --version
           curl -f    -o msys2.tar.xz $MSYS2_TARBALL_URL1 ||
           curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL2
           err1=$?
@@ -139,6 +141,7 @@ jobs:
         bash -lc @'
           where curl
           curl --version
+          pacman --version
           pacman -Syyuu --noconfirm
         '@
     - name: Install MinGW-w64
@@ -146,6 +149,7 @@ jobs:
         bash -lc @'
           where curl
           curl --version
+          pacman --version
           pacman -S --noconfirm base-devel
           pacman -S --noconfirm mingw${{ matrix.bit }}/mingw-w64-${{ matrix.arch }}-toolchain
         '@
