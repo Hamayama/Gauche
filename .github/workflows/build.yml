@@ -137,11 +137,15 @@ jobs:
     - name: Update MSYS2
       run: |
         bash -lc @'
+          where curl
+          curl --version
           pacman -Syyuu --noconfirm
         '@
     - name: Install MinGW-w64
       run: |
         bash -lc @'
+          where curl
+          curl --version
           pacman -S --noconfirm base-devel
           pacman -S --noconfirm mingw${{ matrix.bit }}/mingw-w64-${{ matrix.arch }}-toolchain
         '@
