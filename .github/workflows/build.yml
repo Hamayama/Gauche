@@ -151,13 +151,15 @@ jobs:
         '@
     - name: Install Gauche
       run: |
-        $env:GAUCHE_INSTALLER_VERSION = curl -f $env:GAUCHE_VERSION_URL
-        echo $env:GAUCHE_INSTALLER_VERSION
-        $env:GAUCHE_INSTALLER = "Gauche-mingw-$env:GAUCHE_INSTALLER_VERSION-${{ matrix.bit }}bit.msi"
-        echo $env:GAUCHE_INSTALLER
-        curl -f -L -o $env:GAUCHE_INSTALLER $env:GAUCHE_INSTALLER_URL/$env:GAUCHE_INSTALLER
-        dir
-        cmd.exe /c start /wait msiexec /a $env:GAUCHE_INSTALLER /quiet /qn /norestart TARGETDIR=${{ matrix.devtool_path }}
+        bash -lc @'
+          GAUCHE_INSTALLER_VERSION=`curl -f $GAUCHE_VERSION_URL`
+          echo $GAUCHE_INSTALLER_VERSION
+          GAUCHE_INSTALLER=Gauche-mingw-$GAUCHE_INSTALLER_VERSION-${{ matrix.bit }}bit.msi
+          echo $GAUCHE_INSTALLER
+          curl -f -L -o $GAUCHE_INSTALLER $GAUCHE_INSTALLER_URL/$GAUCHE_INSTALLER
+          ls -l
+          cmd.exe //c \"start /wait msiexec /a $GAUCHE_INSTALLER /quiet /qn /norestart TARGETDIR=${{ matrix.devtool_path }}\"
+        '@
     - name: Add Gauche path
       run: |
         echo "::set-env name=PATH::$env:GAUCHE_PATH;$env:PATH"
