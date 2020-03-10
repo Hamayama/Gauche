@@ -101,10 +101,10 @@ jobs:
         include:
         - arch: x86_64
           bit: 64
-          devtool_path: D:\devtool
+          devtool_path: D:\devtool64
         - arch: i686
           bit: 32
-          devtool_path: D:\devtool
+          devtool_path: D:\devtool32
     env:
       MSYSTEM: MINGW${{ matrix.bit }}
       MSYS2_PATH_TYPE: inherit
