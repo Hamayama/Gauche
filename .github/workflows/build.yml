@@ -134,6 +134,8 @@ jobs:
       run: |
         bash -lc @'
           pwd
+          cd $GITHUB_WORKSPACE
+          pwd
           echo $PATH
         '@
     - name: Update MSYS2
@@ -152,6 +154,7 @@ jobs:
     - name: Install Gauche
       run: |
         bash -lc @'
+          cd $GITHUB_WORKSPACE
           GAUCHE_INSTALLER_VERSION=`curl -f $GAUCHE_VERSION_URL`
           echo $GAUCHE_INSTALLER_VERSION
           GAUCHE_INSTALLER=Gauche-mingw-$GAUCHE_INSTALLER_VERSION-${{ matrix.bit }}bit.msi
@@ -180,9 +183,7 @@ jobs:
     - name: Build
       run: |
         bash -lc @'
-          pwd
           cd $GITHUB_WORKSPACE
-          pwd
           gcc -v
           ./DIST gen
           src/mingw-dist.sh
