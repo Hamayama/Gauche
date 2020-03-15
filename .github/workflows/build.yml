@@ -12,8 +12,7 @@ jobs:
     timeout-minutes: 90
     env:
       GET_GAUCHE_URL: https://raw.githubusercontent.com/shirok/get-gauche/master
-      GET_GAUCHE_CMD: get-gauche.sh
-      GAUCHE_STAGE2_PATH: ../Gauche-tmp-self-host-test/stage2
+      GAUCHE_TEST_PATH: ../Gauche-tmp-self-host-test/stage2
       TESTLOG_NAME: testlog-linux
       TESTLOG_PATH: testlog-linux
     steps:
@@ -21,9 +20,9 @@ jobs:
     - name: Install Gauche
       run: |
         pwd
-        curl -f -o $GET_GAUCHE_CMD $GET_GAUCHE_URL/$GET_GAUCHE_CMD
-        chmod +x $GET_GAUCHE_CMD
-        ./$GET_GAUCHE_CMD --auto --home
+        curl -f -o get-gauche.sh $GET_GAUCHE_URL/get-gauche.sh
+        chmod +x get-gauche.sh
+        ./get-gauche.sh --auto --home
     - name: Add Gauche path
       run: |
         echo "::set-env name=PATH::$HOME/bin:$PATH"
@@ -41,7 +40,7 @@ jobs:
       if: always()
       run: |
         mkdir -p $TESTLOG_PATH/$TESTLOG_NAME
-        cp $GAUCHE_STAGE2_PATH/src/test.log $TESTLOG_PATH/$TESTLOG_NAME
+        cp $GAUCHE_TEST_PATH/src/test.log $TESTLOG_PATH/$TESTLOG_NAME
     - name: Upload testlog
       if: always()
       uses: actions/upload-artifact@v1
@@ -54,8 +53,7 @@ jobs:
     timeout-minutes: 90
     env:
       GET_GAUCHE_URL: https://raw.githubusercontent.com/shirok/get-gauche/master
-      GET_GAUCHE_CMD: get-gauche.sh
-      GAUCHE_STAGE2_PATH: ../Gauche-tmp-self-host-test/stage2
+      GAUCHE_TEST_PATH: ../Gauche-tmp-self-host-test/stage2
       TESTLOG_NAME: testlog-osx
       TESTLOG_PATH: testlog-osx
     steps:
@@ -63,9 +61,9 @@ jobs:
     - name: Install Gauche
       run: |
         pwd
-        curl -f -o $GET_GAUCHE_CMD $GET_GAUCHE_URL/$GET_GAUCHE_CMD
-        chmod +x $GET_GAUCHE_CMD
-        ./$GET_GAUCHE_CMD --auto --home
+        curl -f -o get-gauche.sh $GET_GAUCHE_URL/get-gauche.sh
+        chmod +x get-gauche.sh
+        ./get-gauche.sh --auto --home
     - name: Add Gauche path
       run: |
         echo "::set-env name=PATH::$HOME/bin:$PATH"
@@ -83,7 +81,7 @@ jobs:
       if: always()
       run: |
         mkdir -p $TESTLOG_PATH/$TESTLOG_NAME
-        cp $GAUCHE_STAGE2_PATH/src/test.log $TESTLOG_PATH/$TESTLOG_NAME
+        cp $GAUCHE_TEST_PATH/src/test.log $TESTLOG_PATH/$TESTLOG_NAME
     - name: Upload testlog
       if: always()
       uses: actions/upload-artifact@v1
@@ -112,7 +110,6 @@ jobs:
       MSYS2_TARBALL_URL1: https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.tar.xz
       MSYS2_TARBALL_URL2: http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20190524.tar.xz
       MSYS2_TARBALL_URL3: https://sourceforge.net/projects/msys2/files/Base/x86_64/msys2-base-x86_64-20190524.tar.xz
-      MSYS2_TARBALL_FILE: msys2.tar.xz
       GAUCHE_VERSION_URL: https://practical-scheme.net/gauche/releases/latest.txt
       GAUCHE_INSTALLER_URL: https://prdownloads.sourceforge.net/gauche
       GAUCHE_PATH: ${{ matrix.devtool_path }}\Gauche\bin
@@ -125,12 +122,12 @@ jobs:
       run: |
         bash -lc @'
           pwd
-          curl -f -L -o $MSYS2_TARBALL_FILE $MSYS2_TARBALL_URL1 ||
-          curl -f    -o $MSYS2_TARBALL_FILE $MSYS2_TARBALL_URL2 ||
-          curl -f -L -o $MSYS2_TARBALL_FILE $MSYS2_TARBALL_URL3
+          curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL1 ||
+          curl -f    -o msys2.tar.xz $MSYS2_TARBALL_URL2 ||
+          curl -f -L -o msys2.tar.xz $MSYS2_TARBALL_URL3
           err1=$?
-          #tar xf $MSYS2_TARBALL_FILE -C /d/
-          7z x $MSYS2_TARBALL_FILE -so | 7z x -aoa -si -ttar -oD:
+          #tar xf msys2.tar.xz -C /d/
+          7z x msys2.tar.xz -so | 7z x -aoa -si -ttar -oD:
           ls -l /d/
           exit $err1
         '@
