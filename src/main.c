@@ -215,9 +215,9 @@ void usage(int errorp)
 
 void version(void)
 {
-    printf("Gauche scheme shell, version %s [%s%s], %s\n",
-           GAUCHE_VERSION, SCM_CHAR_ENCODING_NAME, THREAD_OPT,
-           Scm_HostArchitecture());
+    Scm_Printf(SCM_CUROUT, "Gauche scheme shell, version %s [%s%s], %s\n",
+               GAUCHE_VERSION, SCM_CHAR_ENCODING_NAME, THREAD_OPT,
+               Scm_HostArchitecture());
     static ScmObj version_alist_proc = SCM_UNDEFINED;
     SCM_BIND_PROC(version_alist_proc, "version-alist", Scm_GaucheModule());
     ScmObj alist = Scm_ApplyRec0(version_alist_proc), cp;
@@ -225,7 +225,7 @@ void version(void)
     SCM_FOR_EACH(cp, alist) {
         Scm_Printf(SCM_CUROUT, "%S\n", SCM_CAR(cp));
     }
-    exit(0);
+    Scm_Exit(0);
 }
 
 void invoke_other_version(const char *version, int argc, char **argv)
@@ -310,10 +310,6 @@ void further_options(const char *optarg)
     /* Experimental */
     else if (strcmp(optarg, "limit-module-mutation") == 0) {
         SCM_VM_RUNTIME_FLAG_SET(vm, SCM_LIMIT_MODULE_MUTATION);
-    }
-    /* Experimental */
-    else if (strcmp(optarg, "c-expr") == 0) {
-        SCM_VM_COMPILER_FLAG_SET(vm, SCM_COMPILE_ENABLE_CEXPR);
     }
     else {
         fprintf(stderr, "unknown -f option: %s\n", optarg);

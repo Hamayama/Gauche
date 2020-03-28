@@ -318,11 +318,11 @@ static void read_context_flush(ScmReadContext *ctx)
         } else if (SCM_PAIRP(obj)) {
             SCM_FOR_EACH(ep, obj) {
                 if (SCM_READ_REFERENCE_P(SCM_CAR(ep))) {
-                    SCM_SET_CAR(ep, ref_val(SCM_CAR(ep)));
+                    SCM_SET_CAR_UNCHECKED(ep, ref_val(SCM_CAR(ep)));
                 }
                 if (SCM_READ_REFERENCE_P(SCM_CDR(ep))) {
                     /* in case we have (... . #N#) */
-                    SCM_SET_CDR(ep, ref_val(SCM_CDR(ep)));
+                    SCM_SET_CDR_UNCHECKED(ep, ref_val(SCM_CDR(ep)));
                     break;
                 }
             }
@@ -642,18 +642,7 @@ static ScmObj read_internal(ScmPort *port, ScmReadContext *ctx)
         return read_list(port, ']', ctx);
     case '{':
         reject_in_r7(port, ctx, "{}");
-        /* srfi-105 experimental support */
-        {
-            ScmObj r = read_list(port, '}', ctx);
-            if (SCM_VM_COMPILER_FLAG_IS_SET(Scm_VM(),SCM_COMPILE_ENABLE_CEXPR)){
-                static ScmObj xform_cexpr = SCM_UNDEFINED;
-                SCM_BIND_PROC(xform_cexpr, "%xform-cexpr",
-                              Scm_GaucheInternalModule());
-                return Scm_ApplyRec1(xform_cexpr, r);
-            } else {
-                return r;
-            }
-        }
+        return read_list(port, '}', ctx);
     case '+':; case '-':
         /* Note: R5RS doesn't permit identifiers beginning with '+' or '-',
            but some Scheme programs use such identifiers. */
@@ -934,7 +923,7 @@ static ScmObj read_list_int(ScmPort *port, ScmChar closer,
                 Scm_UngetcUnsafe(c2, port);
                 item = read_item(port, ctx);
                 if (SCM_READ_REFERENCE_P(item)) ref_seen = TRUE;
-                SCM_SET_CDR(last, item);
+                SCM_SET_CDR_UNCHECKED(last, item);
                 dot_seen = TRUE;
                 continue;
             }

@@ -2181,6 +2181,14 @@
                        1 11))
 
 ;;-----------------------------------------------------------------------
+(test-section "srfi-116")
+(use srfi-116)
+(test-module 'srfi-116)
+
+(chibi-test
+ (include "include/srfi-116-tests.scm"))
+
+;;-----------------------------------------------------------------------
 (test-section "srfi-117")
 (use srfi-117)
 (test-module 'srfi-117)

@@ -186,9 +186,10 @@ PRIVATE_HEADERS = gauche/priv/arith.h gauche/priv/arith_i386.h \
 	          gauche/priv/builtin-syms.h gauche/priv/codeP.h \
 		  gauche/priv/classP.h gauche/priv/dispatchP.h \
 	          gauche/priv/identifierP.h gauche/priv/macroP.h \
-                  gauche/priv/moduleP.h gauche/priv/parameterP.h \
-	          gauche/priv/portP.h gauche/priv/readerP.h \
-	          gauche/priv/stringP.h gauche/priv/writerP.h
+                  gauche/priv/moduleP.h gauche/priv/pairP.h \
+	          gauche/priv/parameterP.h gauche/priv/portP.h \
+	          gauche/priv/readerP.h gauche/priv/stringP.h \
+	          gauche/priv/writerP.h
 
 # MinGW specific
 INSTALL_MINGWHEADERS = gauche/win-compat.h
@@ -326,7 +327,8 @@ libmod.c   : libmod.scm $(PRECOMP_DEPENDENCY)
 	$(BUILD_GOSH) $(PRECOMP) --keep-private-macro=use $(srcdir)/libmod.scm
 
 libeval.$(OBJEXT) : libeval.c \
-             getdir_win.c getdir_dummy.c getdir_darwin.c paths_arch.c paths.c
+             getdir_win.c getdir_dummy.c getdir_darwin.c getdir_procfs.c \
+	     paths_arch.c paths.c
 libextra.$(OBJEXT): libextra.c paths.c
 
 $(libgc_pic_LIBRARY): $(GCLIB) $(libgc_pic_OBJECTS)

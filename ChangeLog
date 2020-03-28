@@ -1,3 +1,74 @@
+2020-03-26  Shiro Kawai  <shiro@acm.org>
+
+	* lib/srfi-116.scm, lib/scheme/ilist.scm : Added.
+
+2020-03-24  Shiro Kawai  <shiro@acm.org>
+
+	* src/libeval.scm (Scm_RuntimeDirectory): Make it public API, for
+	  it is generally useful, and we'll cover more platforms.
+
+	* lib/gauche/process.scm (%apply-run-process): Fix high-level
+	  utilities rejecting :encoding keyword argument.
+	  https://github.com/shirok/Gauche/issues/651
+
+2020-03-22  Shiro Kawai  <shiro@acm.org>
+
+	* lib/www/css.scm: Support an+b syntax
+	  from @gengar https://github.com/shirok/Gauche/pull/648
+
+2020-03-21  Shiro Kawai  <shiro@acm.org>
+
+	* lib/www/css.scm (construct-css): Fix :not pseudo class rendering
+	  from @leque https://github.com/shirok/Gauche/pull/645
+	  Also add rendering of @import and @media.
+	* libsrc/file/util.scm (make-directory*): Fix timing hazard.
+
+2020-03-15  Shiro Kawai  <shiro@acm.org>
+
+	* src/*: Implement immutable pairs.  This has a few visibile changes:
+	- An ordinary pair is an instance of <mpair>, which inherits <pair>.
+	  An immutable pair is an instance of <ipair> which is also a
+	  subclass of <pair>.  We can't just keep mutable pairs as <pair>
+	  and subclass <ipair> from it, for mutable pairs and immutable pairs
+	  don't have subtype relationship.  BUT, this change may break code
+	  that assumes all pairs are instances of <pair> and has tests like
+	  (eq? (class-of x) <pair>).
+	- SCM_SET_CAR and SCM_SET_CDR simply calls Scm_SetCar and Scm_SetCdr,
+	  which rejects mutating immutable pairs (and we'll have other kind of
+	  hooks).  They do have far more overhead than signle assignment like
+	  before.  If you KNOW you're setting car/cdr of normal pairs (typically
+	  the one you just allocated), you can use SCM_SET_CAR_UNCHECKED and
+	  SCM_SET_CDR_UNCHECKED.
+	- These changes are provisional.  If it breaks something horribly,
+	  we'll change the strategy.
+
+2020-03-14  Shiro Kawai  <shiro@acm.org>
+
+	* Exclude string pointers unless GAUCHE_STRING_POINTER is defined
+	  non-zero.  String pointers are never officially documented, and
+	  now we have string cursors that does the job.   We keep the code
+	  one more release in case there's application code that depends on it.
+
+2020-03-13  Shiro Kawai  <shiro@acm.org>
+
+	* lib/gauche/interactive/editable-reader.scm (%input-complete?):
+	  Regard an empty string as complete input.  I don't remember why
+	  I explicitly excluded it.
+	  Cf: https://github.com/shirok/Gauche/pull/629
+
+2020-03-12  Shiro Kawai  <shiro@acm.org>
+
+	* src/compile-1.scm (pass1/extended-lambda-body):
+	  Allow :allow-other-keys without :key.  It can be useful that the
+	  procedure itself won't handle specific keyword arguments, but
+	  want to let Gauche check the arguments are even.
+
+2020-03-10  Shiro Kawai  <shiro@acm.org>
+
+	* src/compile-1.scm (define-macro, define-syntax): Fix
+	  macro-defining-macro called from other module.
+	  Cf: https://github.com/shirok/Gauche/issues/532
+
 2020-03-03  Shiro Kawai  <shiro@acm.org>
 
 	* src/regexp.c, lib/gauce/regexp/sre.scm: Implement BOG/EOG asseritions.

@@ -705,9 +705,14 @@
   (let* ([proc (eval expr (cenv-module cenv))]
          [trans (%make-macro-transformer name
                                          (^[form env] (apply proc (cdr form)))
-                                         expr #f)])
-    ;; See the "Hygiene alert" in pass1/define.
-    (%insert-syntax-binding (cenv-module cenv) (unwrap-syntax name) trans)
+                                         expr #f)]
+         ;; See the "Hygiene alert" in pass1/define.
+         [id (if (wrapped-identifier? name)
+               (%rename-toplevel-identifier! name)
+               (make-identifier name (cenv-module cenv) '()))])
+    (%insert-syntax-binding (identifier-module id)
+                            (unwrap-syntax name)
+                            trans)
     ($const-undef)))
 
 (define-pass1-syntax (define-syntax form cenv) :null
@@ -717,10 +722,14 @@
   (match form
     [(_ name expr)
      (let* ([cenv (cenv-add-name cenv (variable-name name))]
-            [transformer (pass1/eval-macro-rhs 'define-syntax expr cenv)])
-       ;; See the "Hygiene alert" in pass1/define.
-       (%insert-syntax-binding (cenv-module cenv) (unwrap-syntax name)
-                               transformer)
+            [trans (pass1/eval-macro-rhs 'define-syntax expr cenv)]
+            ;; See the "Hygiene alert" in pass1/define.
+            [id (if (wrapped-identifier? name)
+                  (%rename-toplevel-identifier! name)
+                  (make-identifier name (cenv-module cenv) '()))])
+       (%insert-syntax-binding (identifier-module id)
+                               (unwrap-syntax name)
+                               trans)
        ($const-undef))]
     [_ (error "syntax-error: malformed define-syntax:" form)]))
 
@@ -1309,7 +1318,7 @@
                         os)]
             [rest (or r (gensym))])
         `((,let-optionals*. ,garg ,(append binds rest)
-           ,@(if (and (not r) (null? ks))
+           ,@(if (and (not r) (null? ks) (not a))
                ;; TODO: better error message!
                `((unless (null? ,rest)
                    (error "too many arguments for" ',form))
@@ -1317,7 +1326,13 @@
                (expand-key ks rest a)))))))
   (define (expand-key ks garg a)
     (if (null? ks)
-      body
+      (if a
+        ;; The case when we have :allow-other-keys without :key.
+        ;; We don't deal with specific keyword arguments, but expecting
+        ;; the user provides some.  Using let-keywords* checks the
+        ;; argument list is even.
+        `((,let-keywords*. ,garg ,(if (boolean? a) (gensym) a) ,@body))
+        body)
       (let1 args (map (match-lambda
                         [[? identifier? o] o]
                         [(([? keyword-like? key] o) init)

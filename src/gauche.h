@@ -137,6 +137,13 @@ SCM_DECL_BEGIN
 /* Define this to 0 to turn off lazy-pair feature. */
 #define GAUCHE_LAZY_PAIR 1
 
+/* Temporary - to test alignment of pairs */
+#define GAUCHE_CHECK_PAIR_ALIGNMENT 0
+
+/* TRANSIENT: Define this to 1 to include (obsoleted) string pointer functions.
+   It will be completely gone soon. */
+#define GAUCHE_STRING_POINTER 0
+
 /* Enable an option to make keywords and symbols disjoint.
    (Transient: Will be gone once we completely migrate to
    unified keyword-symbol system */
@@ -172,8 +179,10 @@ SCM_DECL_BEGIN
 
 /* Statically allocated ScmPair must be aligned in two ScmWords boundary.*/
 #ifdef __GNUC__
+#define SCM_PAIR_ALWAYS_ALIGNED_EVEN_WORDS  1
 #define SCM_ALIGN_PAIR  __attribute__ ((aligned(sizeof(ScmWord)*2)))
 #else  /* !__GNUC__ */
+#define SCM_PAIR_ALWAYS_ALIGNED_EVEN_WORDS  0
 #define SCM_ALIGN_PAIR  /*empty*/
 #endif /* !__GNUC__ */
 
@@ -1090,8 +1099,13 @@ struct ScmExtendedPairRec {
 };
 
 #if GAUCHE_LAZY_PAIR
-#define SCM_PAIRP(obj)  \
-    (SCM_HPTRP(obj)&&(SCM_HTAG(obj)!=7||Scm_PairP(SCM_OBJ(obj))))
+#  if GAUCHE_CHECK_PAIR_ALIGNMENT
+#    define SCM_PAIRP(obj)  (Scm_CheckingPairP(SCM_OBJ(obj)))
+SCM_EXTERN int Scm_CheckingPairP(ScmObj);
+#  else
+#    define SCM_PAIRP(obj)                                                  \
+       (SCM_HPTRP(obj)&&(SCM_HTAG(obj)!=7||Scm_PairP(SCM_OBJ(obj))))
+#  endif
 #else  /*!GAUCHE_LAZY_PAIR*/
 #define SCM_PAIRP(obj)          (SCM_HPTRP(obj)&&(SCM_HTAG(obj)!=7))
 #endif /*!GAUCHE_LAZY_PAIR*/
@@ -1104,19 +1118,38 @@ struct ScmExtendedPairRec {
 #define SCM_CDAR(obj)           (SCM_CDR(SCM_CAR(obj)))
 #define SCM_CDDR(obj)           (SCM_CDR(SCM_CDR(obj)))
 
-#define SCM_SET_CAR(obj, value) (SCM_CAR(obj) = (value))
-#define SCM_SET_CDR(obj, value) (SCM_CDR(obj) = (value))
+#define SCM_SET_CAR(obj, value) Scm_SetCar(obj, value)
+#define SCM_SET_CDR(obj, value) Scm_SetCdr(obj, value)
 
+/* Use these only if you know OBJ is a mutable pair */
+#define SCM_SET_CAR_UNCHECKED(obj, value) (SCM_CAR(obj) = (value))
+#define SCM_SET_CDR_UNCHECKED(obj, value) (SCM_CDR(obj) = (value))
+
+#if SIZEOF_INTPTR_T == 4
+#define SCM_ODD_WORD_POINTER_P(p) (SCM_WORD(p) & 0x4)
+#else /*SIZEOF_INTPTR_T == 8*/
+#define SCM_ODD_WORD_POINTER_P(p) (SCM_WORD(p) & 0x8)
+#endif
+
+#if SCM_PAIR_ALWAYS_ALIGNED_EVEN_WORDS
 #define SCM_EXTENDED_PAIR_P(obj) \
-    (SCM_PAIRP(obj)&&GC_base(obj)&&GC_size(obj)>=sizeof(ScmExtendedPair))
+    (SCM_ODD_WORD_POINTER_P(obj)&&SCM_PAIRP(obj))
+#else  /*!SCM_PAIR_ALWAYS_ALIGNED_EVEN_WORDS*/
+#define SCM_EXTENDED_PAIR_P(obj) \
+    (SCM_ODD_WORD_POINTER_P(obj)&&SCM_PAIRP(obj)&&SCM_HOBJP(((ScmObj*)(obj))-1))
+#endif /*!SCM_PAIR_ALWAYS_ALIGNED_EVEN_WORDS*/
 #define SCM_EXTENDED_PAIR(obj)  ((ScmExtendedPair*)(obj))
 
 
 SCM_CLASS_DECL(Scm_ListClass);
 SCM_CLASS_DECL(Scm_PairClass);
+SCM_CLASS_DECL(Scm_IPairClass); /* immutable pair */
+SCM_CLASS_DECL(Scm_MPairClass); /* mutable pair */
 SCM_CLASS_DECL(Scm_NullClass);
 #define SCM_CLASS_LIST          (&Scm_ListClass)
 #define SCM_CLASS_PAIR          (&Scm_PairClass)
+#define SCM_CLASS_IPAIR         (&Scm_IPairClass)
+#define SCM_CLASS_MPAIR         (&Scm_MPairClass)
 #define SCM_CLASS_NULL          (&Scm_NullClass)
 
 #define SCM_LISTP(obj)          (SCM_NULLP(obj) || SCM_PAIRP(obj))
@@ -1185,6 +1218,10 @@ SCM_EXTERN ScmObj Scm_Cadr(ScmObj obj);
 SCM_EXTERN ScmObj Scm_Cdar(ScmObj obj);
 SCM_EXTERN ScmObj Scm_Cddr(ScmObj obj);
 
+SCM_EXTERN int    Scm_ImmutablePairP(ScmObj obj);
+SCM_EXTERN void   Scm_SetCar(ScmObj pair, ScmObj value);
+SCM_EXTERN void   Scm_SetCdr(ScmObj pair, ScmObj value);
+
 SCM_EXTERN ScmSize Scm_Length(ScmObj obj);
 SCM_EXTERN ScmObj Scm_CopyList(ScmObj list);
 SCM_EXTERN ScmObj Scm_MakeList(ScmSmallInt len, ScmObj fill);
@@ -1224,6 +1261,8 @@ SCM_EXTERN ScmObj Scm_ExtendedCons(ScmObj car, ScmObj cdr);
 SCM_EXTERN ScmObj Scm_PairAttr(ScmPair *pair);
 SCM_EXTERN ScmObj Scm_PairAttrGet(ScmPair *pair, ScmObj key, ScmObj fallback);
 SCM_EXTERN ScmObj Scm_PairAttrSet(ScmPair *pair, ScmObj key, ScmObj value);
+
+SCM_EXTERN ScmObj Scm_MakeImmutablePair(ScmObj car, ScmObj cdr);
 
 /*--------------------------------------------------------
  * CHARACTERS
@@ -1988,7 +2027,7 @@ SCM_EXTERN ScmObj Scm_LibraryDirectory(void);
 SCM_EXTERN ScmObj Scm_ArchitectureDirectory(void);
 SCM_EXTERN ScmObj Scm_SiteLibraryDirectory(void);
 SCM_EXTERN ScmObj Scm_SiteArchitectureDirectory(void);
-SCM_EXTERN ScmObj Scm__RuntimeDirectory(void); /* private */
+SCM_EXTERN ScmObj Scm_RuntimeDirectory(void); /* may return SCM_FALSE */
 
 /* Compare and Sort */
 
