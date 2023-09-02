@@ -168,7 +168,15 @@ jobs:
       run: |
         mkdir -p $TESTLOG_PATH/$TESTLOG_NAME
         cp src/test.log $TESTLOG_PATH/$TESTLOG_NAME
-        for d in ext/*; do if test -f $d/test.log; then mkdir -p $TESTLOG_PATH/$TESTLOG_NAME/$d; cp $d/test.log $TESTLOG_PATH/$TESTLOG_NAME/$d; fi; done
+        for d in ext/*; do
+          if test -f $d/test.log; then
+            mkdir -p $TESTLOG_PATH/$TESTLOG_NAME/$d
+            cp $d/test.log $TESTLOG_PATH/$TESTLOG_NAME/$d
+          fi
+        done
+        if test -f src/gosh.gc.log; then
+          cp src/gosh.gc.log $TESTLOG_PATH/$TESTLOG_NAME
+        fi
     - name: Upload testlog
       if: always()
       uses: actions/upload-artifact@v3
