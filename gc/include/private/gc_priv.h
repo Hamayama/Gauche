@@ -1937,8 +1937,8 @@ GC_INNER GC_bool GC_collection_in_progress(void);
                         /* Collection is in progress, or was abandoned. */
 
 #define GC_PUSH_ALL_SYM(sym) \
-                GC_push_all((/* no volatile */ void *)&(sym), \
-                            (/* no volatile */ void *)(&(sym) + 1))
+                GC_push_all_stack((/* no volatile */ ptr_t)&(sym), \
+                                  (/* no volatile */ ptr_t)(&(sym) + 1))
 
 GC_INNER void GC_push_all_stack(ptr_t b, ptr_t t);
                                     /* As GC_push_all but consider      */
